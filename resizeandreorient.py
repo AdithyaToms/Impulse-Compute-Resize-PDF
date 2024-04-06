@@ -27,7 +27,6 @@ def to_specific_size_and_orientation(input_filename, target_size, target_orienta
     writer.write(output_file)
     writer.close()
 
-# Rest of the code remains the same
 def get_page_dimensions(page_size, orientation): 
     sizes = { 'a0': (2384, 3370), 
              'a1': (1684, 2384), 
