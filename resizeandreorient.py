@@ -1,5 +1,6 @@
 from pypdf import PdfReader, PdfWriter
 def to_specific_size_and_orientation(input_file, output_file, target_size, target_orientation):
+    target_orientation=target_orientation.lower()
     with open(input_file, 'rb') as file:
         pdf = PdfReader(file)
         writer = PdfWriter()
