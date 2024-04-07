@@ -5,22 +5,20 @@ def to_specific_size_and_orientation(input_file, output_file, target_size, targe
     with open(input_file, 'rb') as file:
         pdf = PyPDF2.PdfReader(file)
         writer = PyPDF2.PdfWriter()
-
         for page_number in range(len(pdf.pages)):
             page = pdf.pages[page_number]
-            if(target_orientation=="landscape"):
-                page.rotate(-90)
-            target_width, target_height = get_page_dimensions(target_size)
             height = float(page.mediabox.height)
             width = float(page.mediabox.width)
-            scale_by = min(target_height/height,target_width/width)
-            transform = PyPDF2.Transformation().scale(sx=scale_by,sy=scale_by).translate(tx=(target_width-width*scale_by)/2, ty=(target_height-height*scale_by)/2)
-            page.add_transformation(transform)
-            page.cropbox = RectangleObject((0, 0, target_width, target_height))
-            writer = PyPDF2.PdfWriter()
+            if(target_orientation=="landscape" and width<height):
+                page.rotate(-90)
+            elif(target_orientation=="portrait" and width>height):
+                page.rotate(90)
+            target_width, target_height = get_page_dimensions(target_size)
+            page.scale_by(min(target_width/width, target_height/height))
+            page.transfer_rotation_to_content()
             writer.add_page(page)
-            writer.write(output_file)
-            writer.close()
+        with open(output_file, 'wb') as out_file:
+            writer.write(out_file)
 
 def get_page_dimensions(page_size): 
     sizes = { 'a0': (2384, 3370), 
