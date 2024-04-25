@@ -1,4 +1,5 @@
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter, Transformation
+from math import sin, cos, atan, sqrt, radians, pi
 def to_specific_size_and_orientation(input_file, output_file, target_size, target_orientation):
     target_orientation=target_orientation.lower()
     with open(input_file, 'rb') as file:
@@ -8,19 +9,25 @@ def to_specific_size_and_orientation(input_file, output_file, target_size, targe
             page = pdf.pages[page_number]
             height = float(page.mediabox.height)
             width = float(page.mediabox.width)
-            # If you want to rotate the page contents based on the target orientation, uncomment the following lines
-            # if(target_orientation=="landscape" and width<height):
-            #     page.rotate(-90)
-            # elif(target_orientation=="portrait" and width>height):
-            #     page.rotate(90)
             target_width, target_height = get_page_dimensions(target_size,target_orientation)
             page.scale_to(width=target_width, height=target_height)
             page.artbox = page.mediabox
             page.cropbox = page.mediabox
             page.bleedbox = page.mediabox
             page.trimbox =  page.mediabox
-            page.transfer_rotation_to_content()
-            writer.add_page(page)
+            # page.transfer_rotation_to_content()
+            x0 = (page.mediabox.right - page.mediabox.left)/2
+            y0 = (page.mediabox.top   - page.mediabox.bottom)/2
+            a0 = atan(max(x0,y0)/min(x0,y0))
+            s0 = min(x0,y0)/cos(a0 - abs((pi/2)%pi - pi/2))/sqrt(x0**2 + y0**2) 
+            if(target_orientation=="landscape" and height>width):
+                op = Transformation().translate(tx=-x0,ty=-y0).scale(sx=s0/1.5,sy=s0).rotate(0).translate(tx=x0,ty=y0)
+            elif(target_orientation=="portrait" and height<width):
+                op = Transformation().translate(tx=-x0,ty=-y0).scale(sx=s0,sy=s0/1.5).rotate(0).translate(tx=x0,ty=y0)
+            else:
+                op = Transformation().translate(tx=-x0,ty=-y0).scale(sx=s0,sy=s0).rotate(0).translate(tx=x0,ty=y0)
+
+            writer.add_page(page).add_transformation(op)
         with open(output_file, 'wb') as out_file:
             writer.write(out_file)
 
